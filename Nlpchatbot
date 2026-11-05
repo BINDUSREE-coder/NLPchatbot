@@ -1,0 +1,568 @@
+!pip install -q nltk ipywidgets
+
+import nltk
+import ipywidgets as widgets
+from IPython.display import display, HTML
+
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer, PorterStemmer
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk import pos_tag, ne_chunk
+from nltk.tree import Tree
+
+nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
+nltk.download("wordnet", quiet=True)
+nltk.download("omw-1.4", quiet=True)
+nltk.download("vader_lexicon", quiet=True)
+nltk.download("averaged_perceptron_tagger_eng", quiet=True)
+nltk.download("maxent_ne_chunker_tab", quiet=True)
+nltk.download("words", quiet=True)
+
+# ============================================================
+# NLP OBJECTS
+# ============================================================
+
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+sentiment_analyzer = SentimentIntensityAnalyzer()
+
+
+# ============================================================
+# TITLE
+# ============================================================
+
+display(HTML("""
+<div style="
+    background:linear-gradient(135deg,#1f4e79,#3498db);
+    color:white;
+    padding:25px;
+    border-radius:15px;
+    text-align:center;
+    margin-bottom:20px;">
+
+    <h1 style="margin:0;">
+        🔤 NLP Paragraph Analysis System
+    </h1>
+
+    <p style="font-size:17px;">
+        Tokenization • Stemming • Lemmatization •
+        Sentiment Analysis • Entity Recognition
+    </p>
+
+</div>
+"""))
+
+
+# ============================================================
+# PARAGRAPH INPUT
+# ============================================================
+
+display(HTML("""
+<h3 style="color:#2c3e50;">
+📝 Enter your paragraph:
+</h3>
+"""))
+
+paragraph_input = widgets.Textarea(
+    value="""Apple is one of the most successful technology companies in the world.
+Steve Jobs founded Apple with Steve Wozniak in California.
+The company has created many innovative products such as the iPhone and MacBook.
+I really love Apple's products because they are powerful, beautiful and easy to use.""",
+
+    placeholder="Enter your paragraph here...",
+
+    layout=widgets.Layout(
+        width="100%",
+        height="180px"
+    )
+)
+
+display(paragraph_input)
+
+
+# ============================================================
+# PROCESS BUTTON
+# ============================================================
+
+process_button = widgets.Button(
+    description="🚀 Analyze Paragraph",
+    button_style="success",
+    layout=widgets.Layout(
+        width="200px",
+        height="45px"
+    )
+)
+
+display(process_button)
+
+
+# ============================================================
+# RESULT OUTPUT BOXES
+# ============================================================
+
+token_output = widgets.HTML()
+
+stem_output = widgets.HTML()
+
+lemma_output = widgets.HTML()
+
+sentiment_output = widgets.HTML()
+
+entity_output = widgets.HTML()
+
+
+# ============================================================
+# BOX CREATION FUNCTION
+# ============================================================
+
+def create_box(title, color, output_widget):
+
+    return widgets.VBox(
+
+        [
+
+            widgets.HTML(f"""
+            <h2 style="
+                color:{color};
+                text-align:center;
+                margin-top:5px;">
+                {title}
+            </h2>
+            """),
+
+            output_widget
+
+        ],
+
+        layout=widgets.Layout(
+            width="48%",
+            padding="15px",
+            border=f"3px solid {color}",
+            border_radius="15px",
+            margin="5px"
+        )
+    )
+
+
+# ============================================================
+# CREATE BOXES
+# ============================================================
+
+token_box = create_box(
+    "🔹 Tokenization",
+    "#3498db",
+    token_output
+)
+
+stem_box = create_box(
+    "🔹 Stemming",
+    "#1abc9c",
+    stem_output
+)
+
+lemma_box = create_box(
+    "🔹 Lemmatization",
+    "#f1c40f",
+    lemma_output
+)
+
+sentiment_box = create_box(
+    "😊 Sentiment Analysis",
+    "#9b59b6",
+    sentiment_output
+)
+
+entity_box = create_box(
+    "🏷️ Entity Recognition",
+    "#e67e22",
+    entity_output
+)
+
+
+# ============================================================
+# DISPLAY BOXES
+# ============================================================
+
+display(HTML("""
+<h2 style="
+    text-align:center;
+    color:#1f4e79;
+    margin-top:25px;">
+    📊 Analysis Results
+</h2>
+"""))
+
+row1 = widgets.HBox(
+    [token_box, stem_box],
+    layout=widgets.Layout(
+        width="100%",
+        justify_content="center"
+    )
+)
+
+row2 = widgets.HBox(
+    [lemma_box, sentiment_box],
+    layout=widgets.Layout(
+        width="100%",
+        justify_content="center"
+    )
+)
+
+row3 = widgets.HBox(
+    [entity_box],
+    layout=widgets.Layout(
+        width="100%",
+        justify_content="center"
+    )
+)
+
+display(row1)
+display(row2)
+display(row3)
+
+
+# ============================================================
+# PROCESS FUNCTION
+# ============================================================
+
+def analyze_paragraph(button):
+
+    paragraph = paragraph_input.value.strip()
+
+    if not paragraph:
+
+        token_output.value = """
+        <p style="color:red;">
+        Please enter a paragraph.
+        </p>
+        """
+
+        return
+
+
+    # ========================================================
+    # TOKENIZATION
+    # ========================================================
+
+    tokens = word_tokenize(paragraph)
+
+
+    # ========================================================
+    # STEMMING
+    # ========================================================
+
+    stems = []
+
+    for word in tokens:
+
+        if word.isalpha():
+
+            stems.append(
+                stemmer.stem(word)
+            )
+
+        else:
+
+            stems.append(word)
+
+
+    # ========================================================
+    # LEMMATIZATION
+    # ========================================================
+
+    lemmas = []
+
+    for word in tokens:
+
+        if word.isalpha():
+
+            lemmas.append(
+                lemmatizer.lemmatize(word)
+            )
+
+        else:
+
+            lemmas.append(word)
+
+
+    # ========================================================
+    # TOKENIZATION HTML
+    # ========================================================
+
+    token_html = """
+    <div style="
+        background:white;
+        padding:15px;
+        border-radius:10px;
+        height:250px;
+        overflow:auto;
+        color:black;
+        font-size:15px;
+        line-height:1.8;">
+    """
+
+    for i, word in enumerate(tokens, 1):
+
+        token_html += f"""
+        <span style="
+            background:#ebf5fb;
+            color:black;
+            padding:5px 8px;
+            margin:3px;
+            border-radius:5px;
+            display:inline-block;">
+
+            {i}. {word}
+
+        </span>
+        """
+
+    token_html += "</div>"
+
+    token_output.value = token_html
+
+
+    # ========================================================
+    # STEMMING HTML
+    # ========================================================
+
+    stem_html = """
+    <div style="
+        background:white;
+        padding:15px;
+        border-radius:10px;
+        height:250px;
+        overflow:auto;
+        color:black;
+        font-size:15px;
+        line-height:1.8;">
+    """
+
+    for i, word in enumerate(stems, 1):
+
+        stem_html += f"""
+        <span style="
+            background:#e8f8f5;
+            color:black;
+            padding:5px 8px;
+            margin:3px;
+            border-radius:5px;
+            display:inline-block;">
+
+            {i}. {word}
+
+        </span>
+        """
+
+    stem_html += "</div>"
+
+    stem_output.value = stem_html
+
+
+    # ========================================================
+    # LEMMATIZATION HTML
+    # ========================================================
+
+    lemma_html = """
+    <div style="
+        background:white;
+        padding:15px;
+        border-radius:10px;
+        height:250px;
+        overflow:auto;
+        color:black;
+        font-size:15px;
+        line-height:1.8;">
+    """
+
+    for i, word in enumerate(lemmas, 1):
+
+        lemma_html += f"""
+        <span style="
+            background:#fef9e7;
+            color:black;
+            padding:5px 8px;
+            margin:3px;
+            border-radius:5px;
+            display:inline-block;">
+
+            {i}. {word}
+
+        </span>
+        """
+
+    lemma_html += "</div>"
+
+    lemma_output.value = lemma_html
+
+
+    # ========================================================
+    # SENTIMENT ANALYSIS
+    # ========================================================
+
+    sentiment_scores = sentiment_analyzer.polarity_scores(
+        paragraph
+    )
+
+    compound = sentiment_scores["compound"]
+
+    if compound >= 0.05:
+
+        sentiment = "Positive 😊"
+        sentiment_color = "#27ae60"
+
+    elif compound <= -0.05:
+
+        sentiment = "Negative 😞"
+        sentiment_color = "#e74c3c"
+
+    else:
+
+        sentiment = "Neutral 😐"
+        sentiment_color = "#7f8c8d"
+
+
+    sentiment_output.value = f"""
+    <div style="
+        background:white;
+        padding:20px;
+        border-radius:10px;
+        color:black;
+        height:250px;
+        box-sizing:border-box;">
+
+        <h2 style="
+            color:{sentiment_color};
+            text-align:center;">
+            {sentiment}
+        </h2>
+
+        <hr>
+
+        <p style="color:black;">
+            <b>Compound Score:</b>
+            {compound:.3f}
+        </p>
+
+        <p style="color:black;">
+            <b>Positive Score:</b>
+            {sentiment_scores["pos"]:.3f}
+        </p>
+
+        <p style="color:black;">
+            <b>Negative Score:</b>
+            {sentiment_scores["neg"]:.3f}
+        </p>
+
+        <p style="color:black;">
+            <b>Neutral Score:</b>
+            {sentiment_scores["neu"]:.3f}
+        </p>
+
+    </div>
+    """
+
+
+    # ========================================================
+    # NAMED ENTITY RECOGNITION
+    # ========================================================
+
+    tagged_words = pos_tag(tokens)
+
+    named_entities = ne_chunk(
+        tagged_words
+    )
+
+
+    entities = []
+
+    for chunk in named_entities:
+
+        if isinstance(chunk, Tree):
+
+            entity_name = " ".join(
+                word for word, tag in chunk.leaves()
+            )
+
+            entity_type = chunk.label()
+
+            entities.append(
+                (entity_name, entity_type)
+            )
+
+
+    # ========================================================
+    # ENTITY RESULT
+    # ========================================================
+
+    if entities:
+
+        entity_html = """
+        <div style="
+            background:white;
+            padding:15px;
+            border-radius:10px;
+            height:250px;
+            overflow:auto;
+            color:black;">
+        """
+
+        for name, entity_type in entities:
+
+            entity_html += f"""
+
+            <div style="
+                background:#fdf2e9;
+                border-left:5px solid #e67e22;
+                padding:10px;
+                margin:8px 0;
+                border-radius:5px;
+                color:black;">
+
+                <b style="color:black;">
+                    {name}
+                </b>
+
+                <span style="
+                    color:#e67e22;
+                    margin-left:10px;">
+
+                    [{entity_type}]
+
+                </span>
+
+            </div>
+
+            """
+
+        entity_html += "</div>"
+
+    else:
+
+        entity_html = """
+        <div style="
+            background:white;
+            padding:20px;
+            border-radius:10px;
+            height:250px;
+            color:black;">
+
+            <p style="color:black;">
+                No named entities detected.
+            </p>
+
+        </div>
+        """
+
+
+    entity_output.value = entity_html
+
+
+# ============================================================
+# CONNECT BUTTON
+# ============================================================
+
+process_button.on_click(
+    analyze_paragraph
+)
